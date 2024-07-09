@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div id="room-container">
+        <input type="text" id="username" placeholder="Enter your username">
+        <input type="text" id="room" placeholder="Enter room name">
+        <button onclick="joinRoom()">Join Room</button>
+    </div>
+    <div id="chat-container" style="display:none;">
+        <div id="messages"></div>
+        <input id="message" type="text" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        var socket = io();
+
+        function joinRoom() {
+            var username = document.getElementById('username').value;
+            var room = document.getElementById('room').value;
+            if (username && room) {
+                socket.emit('join', {'username': username, 'room': room});
+                document.getElementById('room-container').style.display = 'none';
+                document.getElementById('chat-container').style.display = 'block';
+            }
+        }
+
+        function sendMessage() {
+            var username = document.getElementById('username').value;
+            var room = document.getElementById('room').value;
+            var message = document.getElementById('message').value;
+            if (username && room && message) {
+                socket.emit('message', {'username': username, 'room': room, 'message': message});
+                document.getElementById('message').value = '';
+            }
+        }
+
+        socket.on('room_info', function(data) {
+            var messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+            data.messages.forEach(function(msg) {
+                var messageElement = document.createElement('div');
+                messageElement.textContent = msg.username + ': ' + msg.message;
+                messagesDiv.appendChild(messageElement);
+            });
+        });
+
+        socket.on('message', function(data) {
+            var messagesDiv = document.getElementById('messages');
+            var messageElement = document.createElement('div');
+            messageElement.textContent = data.username + ': ' + data.message;
+            messagesDiv.appendChild(messageElement);
+        });
+    </script>
+</body>
+</html>
